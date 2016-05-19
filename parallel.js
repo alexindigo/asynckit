@@ -1,3 +1,5 @@
+var async = require('./lib/async.js');
+
 // Public API
 module.exports = parallel;
 
@@ -6,31 +8,39 @@ module.exports = parallel;
  *
  * @param {array|object} list - array or object (named list) to iterate over
  * @param {function} iterator - iterator to run
- * @param {object} [state] - current job status
  * @param {function} callback - invoked when all elements processed
  */
-function parallel(list, iterator, state, callback)
+function parallel(list, iterator, callback)
 {
-  var key, isNamedList = !Array.isArray(list);
-
-  if (typeof state == 'function')
-  {
-    callback = state;
-    state    = undefined;
-  }
-
-  if (!state)
-  {
-    state = {
+  var isNamedList = !Array.isArray(list)
+    , state =
+    {
       index    : 0,
       namedList: isNamedList ? Object.keys(list) : null,
       jobs     : {},
       results  : isNamedList ? {} : []
-    };
-  }
+    }
+    ;
 
+  while (state.index < (state['namedList'] || list).length)
+  {
+    iterateJob(list, iterator, state, callback);
+    state.index++;
+  }
+}
+
+/**
+ * Iterates over each job object
+ *
+ * @param {array|object} list - array or object (named list) to iterate over
+ * @param {function} iterator - iterator to run
+ * @param {object} state - current job status
+ * @param {function} callback - invoked when all elements processed
+ */
+function iterateJob(list, iterator, state, callback)
+{
   // store current index
-  key = isNamedList ? state['namedList'][state.index] : state.index;
+  var key = state['namedList'] ? state['namedList'][state.index] : state.index;
 
   state.jobs[key] = runJob(iterator, key, list[key], function(error, output)
   {
@@ -64,15 +74,6 @@ function parallel(list, iterator, state, callback)
       return;
     }
   });
-
-  // prepare for the next step
-  state.index++;
-
-  // proceed to the next element
-  if (state.index < (state['namedList'] || list).length)
-  {
-    parallel(list, iterator, state, callback);
-  }
 }
 
 /**
@@ -91,12 +92,12 @@ function runJob(iterator, key, item, callback)
   // allow shortcut if iterator expects only two arguments
   if (iterator.length == 2)
   {
-    abort = iterator(item, callback);
+    abort = iterator(item, async(callback));
   }
   // otherwise go with full three arguments
   else
   {
-    abort = iterator(item, key, callback);
+    abort = iterator(item, key, async(callback));
   }
 
   return abort;
