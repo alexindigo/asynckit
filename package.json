@@ -6,12 +6,12 @@
   "scripts": {
     "clean": "rimraf coverage",
     "lint": "eslint *.js test/*.js",
-    "test": "istanbul cover --reporter=json tape -- 'test/*.js' | tap-spec",
-    "win-test": "tape test/*.js",
+    "test": "istanbul cover --reporter=json tape -- 'test/test-*.js' | tap-spec",
+    "win-test": "tape test/test-*.js",
     "browser": "browserify -t browserify-istanbul test/test-*.js | obake --coverage | tap-spec",
     "report": "istanbul report",
     "size": "browserify index.js | size-table asynckit",
-    "debug": "tape test/*.js | tap-spec"
+    "debug": "tape test/test-*.js | tap-spec"
   },
   "pre-commit": [
     "clean",
