@@ -27,7 +27,7 @@ test('iterates over array', function(t)
   });
 });
 
-test('longest finishes last', function(t)
+test('array: longest finishes last', function(t)
 {
   var source   = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
     , expected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
@@ -36,7 +36,8 @@ test('longest finishes last', function(t)
 
   t.plan(expected.length + 3);
 
-  parallel(source, function(item, cb)
+  // supports full value, key, callback (shortcut) interface
+  parallel(source, function(item, key, cb)
   {
     setTimeout(function()
     {
@@ -58,9 +59,9 @@ test('longest finishes last', function(t)
   });
 });
 
-test('terminates early', function(t)
+test('array: terminates early', function(t)
 {
-  var source   = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+  var source   = [ 1, 1, 4, 16, 66, 34, 8, 2 ]
     , salvaged = [ 1, 1, 4, , , , 8, 2 ]
     , expected = [ 1, 1, 2, 4, 8 ]
     , target   = []
@@ -99,9 +100,9 @@ test('terminates early', function(t)
   });
 });
 
-test('handles non terminable iterations', function(t)
+test('array: handles non terminable iterations', function(t)
 {
-  var source   = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+  var source   = [ 1, 1, 4, 16, 65, 33, 8, 2 ]
     , expected = [ 1, 1, 2, 4, 8 ]
     , target   = []
     , previous = 0
@@ -129,7 +130,7 @@ test('handles non terminable iterations', function(t)
       }
     }, 25 * item);
 
-    return (item % 2) ? clearTimeout.bind(null, id) : null;
+    return (item % 2) ? null : clearTimeout.bind(null, id);
   },
   function(err)
   {
@@ -138,7 +139,7 @@ test('handles non terminable iterations', function(t)
   });
 });
 
-test('handles unclean callbacks', function(t)
+test('array: handles unclean callbacks', function(t)
 {
   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
     , expected = [ 2, 4, 6, 8, 6, 4, 2 ]

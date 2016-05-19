@@ -14,9 +14,9 @@ Minimal async jobs utility library.
 
 | compression        |    size |
 | :----------------- | ------: |
-| asynckit.js        | 2.27 kB |
-| asynckit.min.js    |   958 B |
-| asynckit.min.js.gz |   491 B |
+| asynckit.js        | 3.47 kB |
+| asynckit.min.js    | 1.19 kB |
+| asynckit.min.js.gz |   590 B |
 
 
 ## Install
@@ -61,6 +61,48 @@ function asyncJob(item, cb)
   // pretend different jobs take different time to finish
   // and not in consequential order
   var timeoutId = setTimeout(function() {
+    target.push(item);
+    cb(null, item * 2);
+  }, delay);
+
+  // allow to cancel "leftover" jobs upon error
+  // return function, invoking of which will abort this job
+  return clearTimeout.bind(null, timeoutId);
+}
+```
+
+Also it supports named jobs, listed via object.
+
+```javascript
+var parallel = require('asynckit/parallel')
+  , assert   = require('assert')
+  ;
+
+var source         = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+  , expectedResult = { first: 2, one: 2, four: 8, sixteen: 32, sixtyFour: 128, thirtyTwo: 64, eight: 16, two: 4 }
+  , expectedTarget = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
+  , expectedKeys   = [ 'first', 'one', 'two', 'four', 'eight', 'sixteen', 'thirtyTwo', 'sixtyFour' ]
+  , target         = []
+  , keys           = []
+  ;
+
+parallel(source, asyncJob, function(err, result)
+{
+  assert.deepEqual(result, expectedResult);
+  assert.deepEqual(target, expectedTarget);
+  assert.deepEqual(keys, expectedKeys);
+});
+
+// supports full value, key, callback (shortcut) interface
+function asyncJob(item, key, cb)
+{
+  // different delays (in ms) per item
+  var delay = item * 25;
+
+  // pretend different jobs take different time to finish
+  // and not in consequential order
+  var timeoutId = setTimeout(function() {
+    keys.push(key);
     target.push(item);
     cb(null, item * 2);
   }, delay);

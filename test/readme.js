@@ -1,3 +1,6 @@
+// TODO: Need to fix reamde first
+// make it parse markdown properly
+
 var fs       = require('fs')
   , path     = require('path')
   , test     = require('tape')
@@ -24,7 +27,7 @@ examples = reamde(content, {
 // Run tests
 test('readme', function(t)
 {
-  t.plan(2);
+  t.plan(5);
 
   examples.forEach(function(ex)
   {

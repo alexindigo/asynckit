@@ -8,6 +8,7 @@
 .travis.yml
 appveyor.yml
 
+.nyc_output
 coverage
 node_modules
 test
