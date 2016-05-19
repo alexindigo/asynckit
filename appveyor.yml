@@ -16,7 +16,7 @@ test_script:
   - node --version
   - npm --version
   - npm run lint
-  - npm run test
+  - npm run win-test
 build: off
 matrix:
   fast_finish: true

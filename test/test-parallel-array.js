@@ -1,3 +1,4 @@
+/* eslint no-sparse-arrays: "off" */
 var test     = require('tape')
   , parallel = require('../parallel.js')
   ;
