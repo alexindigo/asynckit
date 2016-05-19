@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rimraf coverage",
     "lint": "eslint *.js test/*.js",
-    "test": "nyc --reporter=json tape -- 'test/test-*.js' | tap-spec",
+    "test": "nyc --reporter=json tape -- 'test/*.js' | tap-spec",
     "browser": "browserify -t browserify-istanbul test/test-*.js | obake --coverage | tap-spec",
     "report": "istanbul report",
     "size": "browserify index.js | size-table asynckit",
