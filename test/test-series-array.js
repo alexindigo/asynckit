@@ -1,35 +1,35 @@
-/* eslint no-sparse-arrays: "off" */
-var test     = require('tape').test
-  , parallel = require('../parallel.js')
-  , defer    = require('../lib/defer.js')
+var test   = require('tape').test
+  , series = require('../series.js')
+  , defer  = require('../lib/defer.js')
   ;
 
-test('parallel: iterates over array', function(t)
+test('series: iterates over array', function(t)
 {
   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
+    , itemsSum = 16
     , expected = [ 'A', 'B', 'C', 'D', 'C', 'B', 'A' ]
     , start    = +new Date()
     ;
 
   t.plan(expected.length + 3);
 
-  parallel(source, function(item, cb)
+  series(source, function(item, cb)
   {
-    t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array');
+    t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array (' + source + ')');
 
-    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 200 * item);
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 100 * item);
   },
   function(err, result)
   {
     var diff = +new Date() - start;
 
-    t.ok(diff < 1000, 'expect response time (' + diff + 'ms) to be less than 1 second');
+    t.ok(diff > (itemsSum * 100), 'expect response time (' + diff + 'ms) to be more than ' + (itemsSum * 100) + ' ms');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters array');
   });
 });
 
-test('parallel: handles sync array iterator asynchronously', function(t)
+test('series: handles sync array iterator asynchronously', function(t)
 {
   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
     , expected = [ 'A', 'B', 'C', 'D', 'C', 'B', 'A' ]
@@ -40,7 +40,7 @@ test('parallel: handles sync array iterator asynchronously', function(t)
 
   defer(function(){ isAsync = true; });
 
-  parallel(source, function(item, cb)
+  series(source, function(item, cb)
   {
     t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array');
     cb(null, String.fromCharCode(64 + item));
@@ -53,56 +53,47 @@ test('parallel: handles sync array iterator asynchronously', function(t)
   });
 });
 
-test('parallel: array: longest finishes last', function(t)
+test('series: array: longest finishes in order', function(t)
 {
-  var source   = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
-    , expected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
-    , target   = []
+  var source      = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+    , notExpected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
+    , target      = []
     ;
 
-  t.plan(expected.length + 3);
+  t.plan(4);
 
   // supports full value, key, callback (shortcut) interface
-  parallel(source, function(item, key, cb)
+  series(source, function(item, key, cb)
   {
     setTimeout(function()
     {
-      // just "hardcode" first element
-      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
-
-      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current number (' + item + ')');
-
       target.push(item);
-
       cb(null, item);
-    }, 25 * item);
+    }, 5 * item);
   },
   function(err, result)
   {
     t.error(err, 'expect no errors');
     t.deepEqual(result, source, 'expect result to be same as source array');
-    t.deepEqual(target, expected, 'expect target to contain ordered numbers');
+    t.deepEqual(target, source, 'expect target to be same as source array');
+    t.notDeepEqual(target, notExpected, 'do not expect target to contain ordered numbers');
   });
 });
 
-test('parallel: array: terminates early', function(t)
+test('series: array: terminates early', function(t)
 {
   var source   = [ 1, 1, 4, 16, 66, 34, 8, 2 ]
-    , salvaged = [ 1, 1, 4, , , , 8, 2 ]
-    , expected = [ 1, 1, 2, 4, 8 ]
+    , expected = [ 1, 1, 4 ]
     , target   = []
     ;
 
   t.plan(expected.length + 3 + 1);
 
-  parallel(source, function(item, cb)
+  series(source, function(item, cb)
   {
     var id = setTimeout(function()
     {
-      // just "hardcode" first element
-      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
-
-      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current number (' + item + ')');
+      t.ok(item < 5 || item == 16, 'expect only certain numbers being processed');
 
       if (item < 10)
       {
@@ -114,38 +105,38 @@ test('parallel: array: terminates early', function(t)
       {
         cb({item: item});
       }
-    }, 25 * item);
+    }, 5 * item);
 
     return clearTimeout.bind(null, id);
   },
   function(err, result)
   {
     t.equal(err.item, 16, 'expect to error out on 16');
-    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source array');
+    t.deepEqual(result, expected, 'expect result to contain processed parts that less than 10 of the source array');
     t.deepEqual(target, expected, 'expect target to contain passed numbers');
   });
 });
 
-test('parallel: array: handles non terminable iterations', function(t)
+test('series: array: handles non terminable iterations', function(t)
 {
   var source   = [ 1, 1, 4, 16, 65, 33, 8, 2 ]
-    , expected = [ 1, 1, 2, 4, 8 ]
+    , expected = [ 1, 1, 4 ]
     , target   = []
     , previous = 0
     ;
 
-  t.plan(expected.length + 2);
+  t.plan(expected.length + 2 + 1);
 
-  parallel(source, function(item, cb)
+  series(source, function(item, cb)
   {
     var id = setTimeout(function()
     {
+      // expect it to be invoked in order
+      t.ok(item >= previous, 'expect item (' + item + ') to be equal or greater than previous item (' +  previous + ')');
+      previous = item;
+
       if (item < 10)
       {
-        // expect it to be invoked in order
-        t.ok(item >= previous, 'expect item (' + item + ') to be equal or greater than previous item (' +  previous + ')');
-        previous = item;
-
         target.push(item);
         cb(null, item);
       }
@@ -154,7 +145,7 @@ test('parallel: array: handles non terminable iterations', function(t)
       {
         cb({item: item});
       }
-    }, 25 * item);
+    }, 5 * item);
 
     return (item % 2) ? null : clearTimeout.bind(null, id);
   },
@@ -165,7 +156,7 @@ test('parallel: array: handles non terminable iterations', function(t)
   });
 });
 
-test('parallel: array: handles unclean callbacks', function(t)
+test('series: array: handles unclean callbacks', function(t)
 {
   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
     , expected = [ 2, 4, 6, 8, 6, 4, 2 ]
@@ -173,7 +164,7 @@ test('parallel: array: handles unclean callbacks', function(t)
 
   t.plan(expected.length + 2);
 
-  parallel(source, function(item, cb)
+  series(source, function(item, cb)
   {
     setTimeout(function()
     {
@@ -182,7 +173,7 @@ test('parallel: array: handles unclean callbacks', function(t)
       cb(null, item * 2);
       cb(null, item * -2);
 
-    }, 50 * item);
+    }, 5 * item);
   },
   function(err, result)
   {

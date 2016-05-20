@@ -1,11 +1,12 @@
-var test     = require('tape').test
-  , parallel = require('../parallel.js')
-  , defer    = require('../lib/defer.js')
+var test   = require('tape').test
+  , series = require('../series.js')
+  , defer  = require('../lib/defer.js')
   ;
 
-test('parallel: iterates over object', function(t)
+test('series: iterates over object', function(t)
 {
   var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
+    , itemsSum = 16
     , keys     = Object.keys(source)
     , expected = { first: 'A', second: 'B', third: 'C', fourth: 'D', three: 'C', two: 'B', one: 'A' }
     , start    = +new Date()
@@ -14,24 +15,24 @@ test('parallel: iterates over object', function(t)
   t.plan(keys.length * 2 + 3);
 
   // supports full value, key, callback (shortcut) interface
-  parallel(source, function(item, key, cb)
+  series(source, function(item, key, cb)
   {
     t.ok(keys.indexOf(key) != -1, 'expect key (' + key + ') to exist in the keys array');
     t.equal(item, source[key], 'expect item (' + item + ') to match in same key (' + key + ') element in the source object');
 
-    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 200 * item);
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 100 * item);
   },
   function(err, result)
   {
     var diff = +new Date() - start;
 
-    t.ok(diff < 1000, 'expect response time (' + diff + 'ms) to be less than 1 second');
+    t.ok(diff > (itemsSum * 100), 'expect response time (' + diff + 'ms) to be more than ' + (itemsSum * 100) + ' ms');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters object');
   });
 });
 
-test('parallel: handles sync object iterator asynchronously', function(t)
+test('series: handles sync object iterator asynchronously', function(t)
 {
   var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
     , keys     = Object.keys(source)
@@ -44,7 +45,7 @@ test('parallel: handles sync object iterator asynchronously', function(t)
   defer(function(){ isAsync = true; });
 
   // supports full value, key, callback (shortcut) interface
-  parallel(source, function(item, key, cb)
+  series(source, function(item, key, cb)
   {
     t.ok(keys.indexOf(key) != -1, 'expect key (' + key + ') to exist in the keys array');
     t.equal(item, source[key], 'expect item (' + item + ') to match in same key (' + key + ') element in the source object');
@@ -59,58 +60,54 @@ test('parallel: handles sync object iterator asynchronously', function(t)
   });
 });
 
-test('parallel: object: longest finishes last', function(t)
+test('series: object: longest finishes in order', function(t)
 {
-  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
-    , keys     = Object.keys(source)
-    , expected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
-    , target   = []
+  var source      = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , expected    = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+    , target      = []
     ;
 
-  t.plan(keys.length + 3);
+  t.plan(3);
 
   // supports just value, callback (shortcut) interface
-  parallel(source, function(item, cb)
+  series(source, function(item, cb)
   {
     setTimeout(function()
     {
-      // just "hardcode" first element
-      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
-
-      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current number (' + item + ')');
-
       target.push(item);
-
       cb(null, item);
-    }, 10 * item);
+    }, 5 * item);
   },
   function(err, result)
   {
     t.error(err, 'expect no errors');
     t.deepEqual(result, source, 'expect result to be same as source object');
-    t.deepEqual(target, expected, 'expect target to contain ordered numbers');
+    // expect it to be invoked in order
+    // which is not always the case with objects
+    // use `seriesOrdered` if order really matters
+    t.deepEqual(target, expected, 'expect target to be same as source object');
   });
 });
 
-test('parallel: object: terminates early', function(t)
+test('series: object: terminates early', function(t)
 {
   var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
-    , salvaged = { first: 1, one: 1, two: 2, four: 4, eight: 8}
-    , expected = [ 1, 1, 2, 4, 8 ]
+    , salvaged = { first: 1, one: 1, four: 4 }
+    , expected = [ 1, 1, 4 ]
     , target   = []
     ;
 
   t.plan(Object.keys(salvaged).length + 4 + 1);
 
   // supports full value, key, callback (shortcut) interface
-  parallel(source, function(item, key, cb)
+  series(source, function(item, key, cb)
   {
     var id = setTimeout(function()
     {
-      // just "hardcode" first element
-      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
-
-      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current item (' + key + ':' + item + ')');
+      // expect it to be invoked in order
+      // which is not always the case with objects
+      // use `seriesOrdered` if order really matters
+      t.ok(item < 5 || item == 16, 'expect only certain numbers being processed');
 
       if (item < 10)
       {
@@ -122,7 +119,7 @@ test('parallel: object: terminates early', function(t)
       {
         cb({key: key, item: item});
       }
-    }, 10 * item);
+    }, 5 * item);
 
     return clearTimeout.bind(null, id);
   },
@@ -135,27 +132,29 @@ test('parallel: object: terminates early', function(t)
   });
 });
 
-test('parallel: object: handles non terminable iterations', function(t)
+test('series: object: handles non terminable iterations', function(t)
 {
   var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
-    , expected = [ 1, 1, 2, 4, 8 ]
+    , expected = [ 1, 1, 4 ]
     , target   = []
     , previous = 0
     ;
 
-  t.plan(expected.length + 2);
+  t.plan(expected.length + 2 + 1);
 
   // supports just value, callback (shortcut) interface
-  parallel(source, function(item, cb)
+  series(source, function(item, cb)
   {
     var id = setTimeout(function()
     {
+      // expect it to be invoked in order
+      // which is not always the case with objects
+      // use `seriesOrdered` if order really matters
+      t.ok(item >= previous, 'expect item (' + item + ') to be equal or greater than previous item (' +  previous + ')');
+      previous = item;
+
       if (item < 10)
       {
-        // expect it to be invoked in order
-        t.ok(item >= previous, 'expect item (' + item + ') to be equal or greater than previous item (' +  previous + ')');
-        previous = item;
-
         target.push(item);
         cb(null, item);
       }
@@ -164,7 +163,7 @@ test('parallel: object: handles non terminable iterations', function(t)
       {
         cb({item: item});
       }
-    }, 10 * item);
+    }, 5 * item);
 
     return (item % 2) ? null : clearTimeout.bind(null, id);
   },
@@ -175,7 +174,7 @@ test('parallel: object: handles non terminable iterations', function(t)
   });
 });
 
-test('parallel: object: handles unclean callbacks', function(t)
+test('series: object: handles unclean callbacks', function(t)
 {
   var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
     , keys     = Object.keys(source)
@@ -185,7 +184,7 @@ test('parallel: object: handles unclean callbacks', function(t)
   t.plan(keys.length * 2 + 2);
 
   // supports full value, key, callback (shortcut) interface
-  parallel(source, function(item, key, cb)
+  series(source, function(item, key, cb)
   {
     setTimeout(function()
     {
@@ -195,7 +194,7 @@ test('parallel: object: handles unclean callbacks', function(t)
       cb(null, item * 2);
       cb(null, item * -2);
 
-    }, 10 * item);
+    }, 5 * item);
   },
   function(err, result)
   {
