@@ -1,6 +1,7 @@
 /* eslint no-sparse-arrays: "off" */
-var test     = require('tape')
-  , parallel = require('../parallel.js')
+var test      = require('tape').test
+  , parallel  = require('../parallel.js')
+  , nextTick  = require('../lib/next-tick.js')
   ;
 
 test('iterates over array', function(t)
@@ -23,6 +24,30 @@ test('iterates over array', function(t)
     var diff = +new Date() - start;
 
     t.ok(diff < 1000, 'expect response time (' + diff + 'ms) to be less than 1 second');
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, expected, 'expect result to be an ordered letters array');
+  });
+});
+
+test('handles sync array iterator asynchronously', function(t)
+{
+  var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
+    , expected = [ 'A', 'B', 'C', 'D', 'C', 'B', 'A' ]
+    , isAsync  = false
+    ;
+
+  t.plan(expected.length + 3);
+
+  nextTick(function(){ isAsync = true; });
+
+  parallel(source, function(item, cb)
+  {
+    t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array');
+    cb(null, String.fromCharCode(64 + item));
+  },
+  function(err, result)
+  {
+    t.ok(isAsync, 'expect async response');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters array');
   });

@@ -14,9 +14,9 @@ Minimal async jobs utility library.
 
 | compression        |    size |
 | :----------------- | ------: |
-| asynckit.js        | 6.94 kB |
-| asynckit.min.js    | 2.51 kB |
-| asynckit.min.js.gz | 1.08 kB |
+| asynckit.js        | 7.07 kB |
+| asynckit.min.js    | 2.59 kB |
+| asynckit.min.js.gz |  1.1 kB |
 
 
 ## Install

@@ -1,5 +1,6 @@
-var test     = require('tape')
+var test     = require('tape').test
   , parallel = require('../parallel.js')
+  , nextTick = require('../lib/next-tick.js')
   ;
 
 test('iterates over object', function(t)
@@ -25,6 +26,34 @@ test('iterates over object', function(t)
     var diff = +new Date() - start;
 
     t.ok(diff < 1000, 'expect response time (' + diff + 'ms) to be less than 1 second');
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, expected, 'expect result to be an ordered letters object');
+  });
+});
+
+test('handles sync object iterator asynchronously', function(t)
+{
+  var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
+    , keys     = Object.keys(source)
+    , expected = { first: 'A', second: 'B', third: 'C', fourth: 'D', three: 'C', two: 'B', one: 'A' }
+    , isAsync  = false
+    ;
+
+  t.plan(keys.length * 2 + 3);
+
+  nextTick(function(){ isAsync = true; });
+
+  // supports full value, key, callback (shortcut) interface
+  parallel(source, function(item, key, cb)
+  {
+    t.ok(keys.indexOf(key) != -1, 'expect key (' + key + ') to exist in the keys array');
+    t.equal(item, source[key], 'expect item (' + item + ') to match in same key (' + key + ') element in the source object');
+
+    cb(null, String.fromCharCode(64 + item));
+  },
+  function(err, result)
+  {
+    t.ok(isAsync, 'expect async response');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters object');
   });

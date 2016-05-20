@@ -8,7 +8,7 @@
     "lint": "eslint *.js test/*.js",
     "test": "istanbul cover --reporter=json tape -- 'test/test-*.js' | tap-spec",
     "win-test": "tape test/test-*.js",
-    "browser": "browserify -t browserify-istanbul test/test-*.js | obake --coverage | tap-spec",
+    "browser": "browserify -t browserify-istanbul test/lib/browserify_adjustment.js test/test-*.js | obake --coverage | tap-spec",
     "report": "istanbul report",
     "size": "browserify index.js | size-table asynckit",
     "debug": "tape test/test-*.js | tap-spec"
