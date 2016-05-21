@@ -19,13 +19,13 @@ test('parallel: iterates over object', function(t)
     t.ok(keys.indexOf(key) != -1, 'expect key (' + key + ') to exist in the keys array');
     t.equal(item, source[key], 'expect item (' + item + ') to match in same key (' + key + ') element in the source object');
 
-    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 20 * item);
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
   },
   function(err, result)
   {
     var diff = +new Date() - start;
 
-    t.ok(diff < 100, 'expect response time (' + diff + 'ms) to be less than 1 second');
+    t.ok(diff < 160, 'expect response time (' + diff + 'ms) to be less than 1 second');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters object');
   });
