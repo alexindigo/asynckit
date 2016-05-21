@@ -12,6 +12,12 @@ Minimal async jobs utility library.
 
 <!-- [![Readme](https://img.shields.io/badge/readme-tested-brightgreen.svg?style=flat)](https://www.npmjs.com/package/reamde) -->
 
+AsyncKit provides harness for `parallel` and `serial` iterators over list of items represented by arrays or objects.
+Optionally it accepts abort function (should be synchronously return by iterator for each item), and terminates left over jobs upon an error event. For specific iteration order built-in (`ascending` and `descending`) and custom sort helpers also supported, via `asynckit.serialOrdered` method.
+
+It ensures async operations to keep behavior more stable and prevent `Maximum call stack size exceeded` errors, from sync iterators.
+
+
 | compression        |     size |
 | :----------------- | -------: |
 | asynckit.js        | 10.44 kB |
@@ -22,7 +28,7 @@ Minimal async jobs utility library.
 ## Install
 
 ```sh
-$ npm install asynckit --save
+$ npm install --save asynckit
 ```
 
 ## Examples
@@ -35,7 +41,7 @@ will terminate rest of the active jobs (if abort function is provided)
 and return error along with salvaged data to the main callback function.
 
 ```javascript
-var parallel = require('asynckit/parallel')
+var parallel = require('asynckit').parallel
   , assert   = require('assert')
   ;
 
@@ -114,6 +120,15 @@ function asyncJob(item, key, cb)
 ```
 
 ### Serial Jobs
+
+Runs iterator over provided array sequentially. Stores output in the `result` array,
+on the matching positions. In unlikely event of an error from one of the jobs,
+will terminate rest of the active jobs (if abort function is provided)
+and return error along with salvaged data to the main callback function.
+
+
+
+
 
 ### Ordered Serial Iterations
 
