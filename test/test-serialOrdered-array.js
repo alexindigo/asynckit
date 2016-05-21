@@ -84,6 +84,47 @@ test('serialOrdered: iterates over array sorted descending', function(t)
   });
 });
 
+test('serialOrdered: iterates over array custom sorted', function(t)
+{
+  var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
+    , expected = [ 'A', 'B', 'C', 'D', 'C', 'B', 'A' ]
+      // get smallest even number
+    , prev     = Math.min.apply(Math, source.filter(function(n){ return !(n % 2); }))
+      // puts even numbers first
+    , customSort = function(a, b)
+    {
+      var order = a < b ? -1 : a > b ? 1 : 0
+        , aOdd  = a % 2
+        , bOdd  = b % 2
+        ;
+      return aOdd === bOdd ? order : aOdd ? 1 : -1;
+    }
+    ;
+
+  t.plan(expected.length * 2 + 2);
+
+  serialOrdered(source, function(item, key, cb)
+  {
+    var incr  = prev <= item
+      , shift = (prev % 2) !== (item % 2)
+      ;
+
+    t.ok(incr || shift, 'expect item (' + item + ') to increase on each iteration, unless it is switch from even to odd');
+    t.equal(source[key], item, 'expect iteration indices to match original array positions');
+
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
+    prev = item;
+  },
+
+  customSort, // custom sorting
+
+  function(err, result)
+  {
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, expected, 'expect result to keep order of the original array');
+  });
+});
+
 //
 //
 // test('serial: handles sync array iterator asynchronously', function(t)

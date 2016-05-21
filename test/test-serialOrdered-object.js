@@ -86,6 +86,105 @@ test('serialOrdered: iterates over object sorted descending', function(t)
   });
 });
 
+
+test('serialOrdered: iterates over object custom sorted', function(t)
+{
+  var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
+    , keys     = Object.keys(source)
+    , expected = { first: 'A', second: 'B', third: 'C', fourth: 'D', three: 'C', two: 'B', one: 'A' }
+      // separate vowels from consonants
+    , splitVowels = function(word)
+    {
+      var vowels = ['a', 'e', 'i', 'o', 'u']
+        , wordVow = word.split('').map(function(x){ return vowels.indexOf(x) == -1 ? '~' : x; }).join('')
+        , wordCon = word.split('').map(function(x){ return vowels.indexOf(x) == -1 ? x : '.'; }).join('')
+        ;
+      return [wordVow, wordCon];
+    }
+      // sort words based on vowels and their position
+    , customSort = function(wordA, wordB)
+    {
+      wordA = splitVowels(wordA);
+      wordB = splitVowels(wordB);
+      return wordA[0] < wordB[0] ? -1 : (
+        wordA[0] > wordB[0] ? 1 : (
+          wordA[1] < wordB[1] ? -1 : wordA[1] > wordB[1] ? 1 : 0
+        )
+      );
+    }
+      // pre-sort list keys
+    , customSortedKeys = keys.sort(customSort)
+    , prev
+    ;
+
+  t.plan(keys.length * 3 + 2);
+
+  serialOrdered(source, function(item, key, cb)
+  {
+    t.notEqual(customSortedKeys.indexOf(key), -1, 'expect key to be in the list');
+    t.ok(customSortedKeys.indexOf(prev) < customSortedKeys.indexOf(key), 'expect key (' + prev + ' -> ' + key + ') index (' + customSortedKeys.indexOf(prev) + ' -> ' + customSortedKeys.indexOf(key) + ') to increase on each iteration');
+    t.equal(source[key], item, 'expect iteration indices to match original array positions');
+
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
+    prev = key;
+  },
+
+  customSort, // custom sorting
+
+  function(err, result)
+  {
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, expected, 'expect result to keep order of the original array');
+  });
+});
+
+test('serialOrdered: iterates over object custom sorted over values', function(t)
+{
+  var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
+    , keys     = Object.keys(source)
+    , values   = keys.map(function(k){ return source[k]; })
+    , expected = { first: 'A', second: 'B', third: 'C', fourth: 'D', three: 'C', two: 'B', one: 'A' }
+      // get smallest even number
+    , prev     = Math.min.apply(Math, values.filter(function(n){ return !(n % 2); }))
+      // puts even numbers first
+    , evenOddSort = function(a, b)
+    {
+      var order = a < b ? -1 : a > b ? 1 : 0
+        , aOdd  = a % 2
+        , bOdd  = b % 2
+        ;
+      return aOdd === bOdd ? order : aOdd ? 1 : -1;
+    }
+    , customSort = function(keyA, keyB)
+    {
+      return evenOddSort(source[keyA], source[keyB]);
+    }
+    ;
+
+  t.plan(keys.length * 2 + 2);
+
+  serialOrdered(source, function(item, key, cb)
+  {
+    var incr  = prev <= item
+      , shift = (prev % 2) !== (item % 2)
+      ;
+
+    t.ok(incr || shift, 'expect item (' + prev + ' -> ' + item + ') to increase on each iteration, unless it is switch from even to odd');
+    t.equal(source[key], item, 'expect iteration indices to match original array positions');
+
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
+    prev = item;
+  },
+
+  customSort, // custom sorting
+
+  function(err, result)
+  {
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, expected, 'expect result to keep order of the original array');
+  });
+});
+
 //
 //
 // test('serial: handles sync array iterator asynchronously', function(t)

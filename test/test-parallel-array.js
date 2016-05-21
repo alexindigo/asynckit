@@ -23,7 +23,7 @@ test('parallel: iterates over array', function(t)
   {
     var diff = +new Date() - start;
 
-    t.ok(diff < 160, 'expect response time (' + diff + 'ms) to be less than 1 second');
+    t.ok(diff < 160, 'expect response time (' + diff + 'ms) to be less than sum of delays');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters array');
   });
