@@ -1,9 +1,9 @@
 var test   = require('tape').test
-  , series = require('../series.js')
+  , serial = require('../serial.js')
   , defer  = require('../lib/defer.js')
   ;
 
-test('series: iterates over array', function(t)
+test('serial: iterates over array', function(t)
 {
   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
     , itemsSum = 16
@@ -13,23 +13,23 @@ test('series: iterates over array', function(t)
 
   t.plan(expected.length + 3);
 
-  series(source, function(item, cb)
+  serial(source, function(item, cb)
   {
     t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array (' + source + ')');
 
-    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 100 * item);
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
   },
   function(err, result)
   {
     var diff = +new Date() - start;
 
-    t.ok(diff > (itemsSum * 100), 'expect response time (' + diff + 'ms) to be more than ' + (itemsSum * 100) + ' ms');
+    t.ok(diff > (itemsSum * 10), 'expect response time (' + diff + 'ms) to be more than ' + (itemsSum * 10) + ' ms');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters array');
   });
 });
 
-test('series: handles sync array iterator asynchronously', function(t)
+test('serial: handles sync array iterator asynchronously', function(t)
 {
   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
     , expected = [ 'A', 'B', 'C', 'D', 'C', 'B', 'A' ]
@@ -40,7 +40,7 @@ test('series: handles sync array iterator asynchronously', function(t)
 
   defer(function(){ isAsync = true; });
 
-  series(source, function(item, cb)
+  serial(source, function(item, cb)
   {
     t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array');
     cb(null, String.fromCharCode(64 + item));
@@ -53,7 +53,7 @@ test('series: handles sync array iterator asynchronously', function(t)
   });
 });
 
-test('series: array: longest finishes in order', function(t)
+test('serial: array: longest finishes in order', function(t)
 {
   var source      = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
     , notExpected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
@@ -63,7 +63,7 @@ test('series: array: longest finishes in order', function(t)
   t.plan(4);
 
   // supports full value, key, callback (shortcut) interface
-  series(source, function(item, key, cb)
+  serial(source, function(item, key, cb)
   {
     setTimeout(function()
     {
@@ -80,7 +80,7 @@ test('series: array: longest finishes in order', function(t)
   });
 });
 
-test('series: array: terminates early', function(t)
+test('serial: array: terminates early', function(t)
 {
   var source   = [ 1, 1, 4, 16, 66, 34, 8, 2 ]
     , expected = [ 1, 1, 4 ]
@@ -89,7 +89,7 @@ test('series: array: terminates early', function(t)
 
   t.plan(expected.length + 3 + 1);
 
-  series(source, function(item, cb)
+  serial(source, function(item, cb)
   {
     var id = setTimeout(function()
     {
@@ -117,7 +117,7 @@ test('series: array: terminates early', function(t)
   });
 });
 
-test('series: array: handles non terminable iterations', function(t)
+test('serial: array: handles non terminable iterations', function(t)
 {
   var source   = [ 1, 1, 4, 16, 65, 33, 8, 2 ]
     , expected = [ 1, 1, 4 ]
@@ -127,7 +127,7 @@ test('series: array: handles non terminable iterations', function(t)
 
   t.plan(expected.length + 2 + 1);
 
-  series(source, function(item, cb)
+  serial(source, function(item, cb)
   {
     var id = setTimeout(function()
     {
@@ -156,7 +156,7 @@ test('series: array: handles non terminable iterations', function(t)
   });
 });
 
-test('series: array: handles unclean callbacks', function(t)
+test('serial: array: handles unclean callbacks', function(t)
 {
   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
     , expected = [ 2, 4, 6, 8, 6, 4, 2 ]
@@ -164,7 +164,7 @@ test('series: array: handles unclean callbacks', function(t)
 
   t.plan(expected.length + 2);
 
-  series(source, function(item, cb)
+  serial(source, function(item, cb)
   {
     setTimeout(function()
     {

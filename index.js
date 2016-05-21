@@ -1,5 +1,6 @@
 module.exports =
 {
-  parallel: require('./parallel.js'),
-  series  : require('./series.js')
+  parallel      : require('./parallel.js'),
+  serial        : require('./serial.js'),
+  serialOrdered : require('./serialOrdered.js')
 };

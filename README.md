@@ -12,11 +12,11 @@ Minimal async jobs utility library.
 
 <!-- [![Readme](https://img.shields.io/badge/readme-tested-brightgreen.svg?style=flat)](https://www.npmjs.com/package/reamde) -->
 
-| compression        |    size |
-| :----------------- | ------: |
-| asynckit.js        | 8.69 kB |
-| asynckit.min.js    | 3.11 kB |
-| asynckit.min.js.gz |  1.2 kB |
+| compression        |     size |
+| :----------------- | -------: |
+| asynckit.js        | 10.44 kB |
+| asynckit.min.js    |  3.47 kB |
+| asynckit.min.js.gz |  1.32 kB |
 
 
 ## Install
@@ -112,6 +112,12 @@ function asyncJob(item, key, cb)
   return clearTimeout.bind(null, timeoutId);
 }
 ```
+
+### Serial Jobs
+
+### Ordered Serial Iterations
+
+For example [compare-property](compare-property) package.
 
 ## Want to Know More?
 

@@ -16,7 +16,7 @@ function parallel(list, iterator, callback)
 {
   var state = initState(list);
 
-  while (state.index < (state['namedList'] || list).length)
+  while (state.index < (state['keyedList'] || list).length)
   {
     iterate(list, iterator, state, function(error, result)
     {

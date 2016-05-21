@@ -17,13 +17,13 @@ test('parallel: iterates over array', function(t)
   {
     t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array');
 
-    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 200 * item);
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 20 * item);
   },
   function(err, result)
   {
     var diff = +new Date() - start;
 
-    t.ok(diff < 1000, 'expect response time (' + diff + 'ms) to be less than 1 second');
+    t.ok(diff < 100, 'expect response time (' + diff + 'ms) to be less than 1 second');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters array');
   });

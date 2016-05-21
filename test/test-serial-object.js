@@ -1,9 +1,9 @@
 var test   = require('tape').test
-  , series = require('../series.js')
+  , serial = require('../serial.js')
   , defer  = require('../lib/defer.js')
   ;
 
-test('series: iterates over object', function(t)
+test('serial: iterates over object', function(t)
 {
   var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
     , itemsSum = 16
@@ -14,25 +14,25 @@ test('series: iterates over object', function(t)
 
   t.plan(keys.length * 2 + 3);
 
-  // supports full value, key, callback (shortcut) interface
-  series(source, function(item, key, cb)
+  // supports full value, key, callback interface
+  serial(source, function(item, key, cb)
   {
     t.ok(keys.indexOf(key) != -1, 'expect key (' + key + ') to exist in the keys array');
     t.equal(item, source[key], 'expect item (' + item + ') to match in same key (' + key + ') element in the source object');
 
-    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 100 * item);
+    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
   },
   function(err, result)
   {
     var diff = +new Date() - start;
 
-    t.ok(diff > (itemsSum * 100), 'expect response time (' + diff + 'ms) to be more than ' + (itemsSum * 100) + ' ms');
+    t.ok(diff > (itemsSum * 10), 'expect response time (' + diff + 'ms) to be more than ' + (itemsSum * 10) + ' ms');
     t.error(err, 'expect no errors');
     t.deepEqual(result, expected, 'expect result to be an ordered letters object');
   });
 });
 
-test('series: handles sync object iterator asynchronously', function(t)
+test('serial: handles sync object iterator asynchronously', function(t)
 {
   var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
     , keys     = Object.keys(source)
@@ -45,7 +45,7 @@ test('series: handles sync object iterator asynchronously', function(t)
   defer(function(){ isAsync = true; });
 
   // supports full value, key, callback (shortcut) interface
-  series(source, function(item, key, cb)
+  serial(source, function(item, key, cb)
   {
     t.ok(keys.indexOf(key) != -1, 'expect key (' + key + ') to exist in the keys array');
     t.equal(item, source[key], 'expect item (' + item + ') to match in same key (' + key + ') element in the source object');
@@ -60,7 +60,7 @@ test('series: handles sync object iterator asynchronously', function(t)
   });
 });
 
-test('series: object: longest finishes in order', function(t)
+test('serial: object: longest finishes in order', function(t)
 {
   var source      = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
     , expected    = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
@@ -70,7 +70,7 @@ test('series: object: longest finishes in order', function(t)
   t.plan(3);
 
   // supports just value, callback (shortcut) interface
-  series(source, function(item, cb)
+  serial(source, function(item, cb)
   {
     setTimeout(function()
     {
@@ -84,12 +84,12 @@ test('series: object: longest finishes in order', function(t)
     t.deepEqual(result, source, 'expect result to be same as source object');
     // expect it to be invoked in order
     // which is not always the case with objects
-    // use `seriesOrdered` if order really matters
+    // use `serialOrdered` if order really matters
     t.deepEqual(target, expected, 'expect target to be same as source object');
   });
 });
 
-test('series: object: terminates early', function(t)
+test('serial: object: terminates early', function(t)
 {
   var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
     , salvaged = { first: 1, one: 1, four: 4 }
@@ -100,13 +100,13 @@ test('series: object: terminates early', function(t)
   t.plan(Object.keys(salvaged).length + 4 + 1);
 
   // supports full value, key, callback (shortcut) interface
-  series(source, function(item, key, cb)
+  serial(source, function(item, key, cb)
   {
     var id = setTimeout(function()
     {
       // expect it to be invoked in order
       // which is not always the case with objects
-      // use `seriesOrdered` if order really matters
+      // use `serialOrdered` if order really matters
       t.ok(item < 5 || item == 16, 'expect only certain numbers being processed');
 
       if (item < 10)
@@ -132,7 +132,7 @@ test('series: object: terminates early', function(t)
   });
 });
 
-test('series: object: handles non terminable iterations', function(t)
+test('serial: object: handles non terminable iterations', function(t)
 {
   var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
     , expected = [ 1, 1, 4 ]
@@ -143,13 +143,13 @@ test('series: object: handles non terminable iterations', function(t)
   t.plan(expected.length + 2 + 1);
 
   // supports just value, callback (shortcut) interface
-  series(source, function(item, cb)
+  serial(source, function(item, cb)
   {
     var id = setTimeout(function()
     {
       // expect it to be invoked in order
       // which is not always the case with objects
-      // use `seriesOrdered` if order really matters
+      // use `serialOrdered` if order really matters
       t.ok(item >= previous, 'expect item (' + item + ') to be equal or greater than previous item (' +  previous + ')');
       previous = item;
 
@@ -174,7 +174,7 @@ test('series: object: handles non terminable iterations', function(t)
   });
 });
 
-test('series: object: handles unclean callbacks', function(t)
+test('serial: object: handles unclean callbacks', function(t)
 {
   var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
     , keys     = Object.keys(source)
@@ -184,7 +184,7 @@ test('series: object: handles unclean callbacks', function(t)
   t.plan(keys.length * 2 + 2);
 
   // supports full value, key, callback (shortcut) interface
-  series(source, function(item, key, cb)
+  serial(source, function(item, key, cb)
   {
     setTimeout(function()
     {
