@@ -1,6 +1,5 @@
 var test          = require('tape').test
   , serialOrdered = require('../serialOrdered.js')
-//  , defer         = require('../lib/defer.js')
   ;
 
 test('serialOrdered: iterates over object with no sortMethod', function(t)
@@ -46,6 +45,7 @@ test('serialOrdered: iterates over object sorted ascending', function(t)
   {
     t.ok(prev <= key, 'expect key (' + key + ') not to decrease on each iteration – ascending sorting');
     t.equal(source[key], item, 'expect iteration indices to match original object positions');
+
     setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
     prev = key;
   },
@@ -59,7 +59,7 @@ test('serialOrdered: iterates over object sorted ascending', function(t)
   });
 });
 
-test('serialOrdered: iterates over object sorted descending', function(t)
+test('serialOrdered: iterates over object sorted descending (sync iterator)', function(t)
 {
   var source   = { first: 1, second: 2, third: 3, fourth: 4, three: 3, two: 2, one: 1 }
     , keys     = Object.keys(source)
@@ -73,7 +73,9 @@ test('serialOrdered: iterates over object sorted descending', function(t)
   {
     t.ok(prev >= key, 'expect key (' + key + ') not to increase on each iteration – descending sorting');
     t.equal(source[key], item, 'expect iteration indices to match original array positions');
-    setTimeout(cb.bind(null, null, String.fromCharCode(64 + item)), 10 * item);
+
+    cb(null, String.fromCharCode(64 + item));
+    // this should happen before next invocation of the iterator
     prev = key;
   },
 
@@ -185,65 +187,60 @@ test('serialOrdered: iterates over object custom sorted over values', function(t
   });
 });
 
-//
-//
-// test('serial: handles sync array iterator asynchronously', function(t)
-// {
-//   var source   = [ 1, 2, 3, 4, 3, 2, 1 ]
-//     , expected = [ 'A', 'B', 'C', 'D', 'C', 'B', 'A' ]
-//     , isAsync  = false
-//     ;
-//
-//   t.plan(expected.length + 3);
-//
-//   defer(function(){ isAsync = true; });
-//
-//   serial(source, function(item, cb)
-//   {
-//     t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array');
-//     cb(null, String.fromCharCode(64 + item));
-//   },
-//   function(err, result)
-//   {
-//     t.ok(isAsync, 'expect async response');
-//     t.error(err, 'expect no errors');
-//     t.deepEqual(result, expected, 'expect result to be an ordered letters array');
-//   });
-// });
-//
-// test('serial: array: terminates early', function(t)
-// {
-//   var source   = [ 1, 1, 4, 16, 66, 34, 8, 2 ]
-//     , expected = [ 1, 1, 4 ]
-//     , target   = []
-//     ;
-//
-//   t.plan(expected.length + 3 + 1);
-//
-//   serial(source, function(item, cb)
-//   {
-//     var id = setTimeout(function()
-//     {
-//       t.ok(item < 5 || item == 16, 'expect only certain numbers being processed');
-//
-//       if (item < 10)
-//       {
-//         target.push(item);
-//         cb(null, item);
-//       }
-//       // return error on big numbers
-//       else
-//       {
-//         cb({item: item});
-//       }
-//     }, 5 * item);
-//
-//     return clearTimeout.bind(null, id);
-//   },
-//   function(err, result)
-//   {
-//     t.equal(err.item, 16, 'expect to error out on 16');
-//     t.deepEqual(result, expected, 'expect result to contain processed parts that less than 10 of the source array');
-//     t.deepEqual(target, expected, 'expect target to contain passed numbers');
-//   });
-// });
+test('serialOrdered: object: terminates early with custom sorting', function(t)
+{
+  var source   = { first: 1, one: 1, four: 4, five: 5, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, nine: 9, eight: 8, two: 2 }
+    , salvaged = { eight: 8, four: 4, two: 2 }
+    , expected = [ 2, 4, 8, 16 ]
+    , target   = []
+      // puts even numbers first
+    , evenOddSort = function(a, b)
+    {
+      var order = a < b ? -1 : a > b ? 1 : 0
+        , aOdd  = a % 2
+        , bOdd  = b % 2
+        ;
+      return aOdd === bOdd ? order : aOdd ? 1 : -1;
+    }
+      // sort based on the value of the key
+      // even values go first
+    , customSort = function(keyA, keyB)
+    {
+      return evenOddSort(source[keyA], source[keyB]);
+    }
+    ;
+
+  t.plan(expected.length + 4);
+
+  serialOrdered(source, function(item, key, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.ok((item < 10 && item % 2 === 0) || item == 16, 'expect only certain numbers being processed');
+
+      target.push(item);
+
+      if (item < 10)
+      {
+        cb(null, item);
+      }
+      // return error on big numbers
+      else
+      {
+        cb({key: key, item: item});
+      }
+    }, 5 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+
+  customSort, // custom sort
+
+  function(err, result)
+  {
+    t.equal(err.key, 'sixteen', 'expect to error out on key `sixteen`');
+    t.equal(err.item, 16, 'expect to error out on value `16`');
+    t.deepEqual(result, salvaged, 'expect result to contain processed parts that less than 10 of the source object');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+});

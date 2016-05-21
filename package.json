@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "clean": "rimraf coverage",
-    "lint": "eslint *.js test/*.js",
+    "lint": "eslint *.js lib/*.js test/*.js",
     "test": "istanbul cover --reporter=json tape -- 'test/test-*.js' | tap-spec",
     "win-test": "tape test/test-*.js",
     "browser": "browserify -t browserify-istanbul test/lib/browserify_adjustment.js test/test-*.js | obake --coverage | tap-spec",

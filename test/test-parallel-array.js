@@ -1,6 +1,6 @@
 /* eslint no-sparse-arrays: "off" */
 var test     = require('tape').test
-  , parallel = require('../parallel.js')
+  , parallel = require('../').parallel
   , defer    = require('../lib/defer.js')
   ;
 

@@ -1,5 +1,5 @@
 var test   = require('tape').test
-  , serial = require('../serial.js')
+  , serial = require('../').serial
   , defer  = require('../lib/defer.js')
   ;
 
