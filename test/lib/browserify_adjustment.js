@@ -7,7 +7,11 @@ var tape     = require('tape')
 // hook into tape to clean up stuff we don't need in the browser
 tape.Test.prototype.run = function()
 {
-  process.nextTick = undefined;
+  // don't break streams
+  if (!this.name.match(/^stream: /))
+  {
+    process.nextTick = undefined;
+  }
   return run.apply(this, arguments);
 };
 
