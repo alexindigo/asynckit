@@ -117,6 +117,103 @@ test('serial: array: terminates early', function(t)
   });
 });
 
+test('serial: array: terminated early from outside', function(t)
+{
+  var source   = [ 1, 1, 4, 16, 66, 34, 8, 2 ]
+    , expected = [ 1, 1, 4 ]
+    , target   = []
+    , limitNum = 7
+    , terminator
+    ;
+
+  t.plan(expected.length + 3);
+
+  setTimeout(function()
+  {
+    terminator();
+  }, 5 * (limitNum + expected.reduce(function(a, b){ return a + b; })));
+
+  terminator = serial(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.ok(item < limitNum, 'expect only numbers (' + item + ') less than (' + limitNum + ') being processed');
+
+      target.push(item);
+      cb(null, item);
+    }, 5 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    t.error(err, 'expect no error response');
+    t.deepEqual(result, expected, 'expect result to contain processed parts that less than ' + limitNum + ' of the source array');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+});
+
+test('serial: array: terminated prematurely from outside', function(t)
+{
+  var source   = [ 1, 1, 4, 16, 66, 34, 8, 2 ]
+    , expected = [ ]
+    , terminator
+    ;
+
+  t.plan(2);
+
+  terminator = serial(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.fail('do not expect it to come that far');
+      cb(null, item);
+    }, 5 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    t.error(err, 'expect no error response');
+    t.deepEqual(result, expected, 'expect result to contain salvaged parts of the source array');
+  });
+
+  terminator();
+});
+
+test('serial: array: terminated too late from outside', function(t)
+{
+  var source   = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+    , expected = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+    , target   = []
+    , terminator
+    ;
+
+  t.plan(expected.length + 3);
+
+  terminator = serial(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.ok(source.indexOf(item) != -1, 'expect item (' + item + ') to exist in the subject array');
+
+      target.push(item);
+      cb(null, item);
+    }, 5 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    // terminate it after it's done
+    terminator();
+
+    t.error(err, 'expect no error response');
+    t.deepEqual(result, expected, 'expect result to contain salvaged parts of the source array');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+});
+
 test('serial: array: handles non terminable iterations', function(t)
 {
   var source   = [ 1, 1, 4, 16, 65, 33, 8, 2 ]

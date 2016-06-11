@@ -1,5 +1,6 @@
-var iterate   = require('./lib/iterate.js')
-  , initState = require('./lib/state.js')
+var iterate    = require('./lib/iterate.js')
+  , initState  = require('./lib/state.js')
+  , terminator = require('./lib/terminator.js')
   ;
 
 // Public API
@@ -11,10 +12,11 @@ module.exports.descending = descending;
 /**
  * Runs iterator over provided sorted array elements in series
  *
- * @param {array|object} list - array or object (named list) to iterate over
- * @param {function} iterator - iterator to run
- * @param {function} sortMethod - custom sort function
- * @param {function} callback - invoked when all elements processed
+ * @param   {array|object} list - array or object (named list) to iterate over
+ * @param   {function} iterator - iterator to run
+ * @param   {function} sortMethod - custom sort function
+ * @param   {function} callback - invoked when all elements processed
+ * @returns {function} - jobs terminator
  */
 function serialOrdered(list, iterator, sortMethod, callback)
 {
@@ -40,6 +42,8 @@ function serialOrdered(list, iterator, sortMethod, callback)
     // done here
     callback(null, state.results);
   });
+
+  return terminator.bind(state, callback);
 }
 
 /*

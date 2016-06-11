@@ -193,3 +193,34 @@ test('stream: parallel: array: destroyed cleanly', function(t)
 
   streamAssert.success(t, stream, {elements: salvaged});
 });
+
+test('stream: parallel: array: destroyed cleanly at start', function(t)
+{
+  var source   = [ 1, 1, 4, 16, 66, 34, 8, 2 ]
+    , expected = [ ]
+    , stream
+    ;
+
+  t.plan(2);
+
+  stream = asynckitStream.parallel(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.fail('do not expect it to come that far');
+      cb(null, item);
+    }, 25 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, expected, 'expect result to contain salvaged parts of the source array');
+  });
+
+  streamAssert.success(t, stream, {elements: expected});
+
+  // destroy stream before element 16 is processed
+  stream.destroy();
+});

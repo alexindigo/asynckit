@@ -132,6 +132,105 @@ test('serial: object: terminates early', function(t)
   });
 });
 
+test('serial: object: terminated early from outside', function(t)
+{
+  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , salvaged = { first: 1, one: 1, four: 4 }
+    , expected = [ 1, 1, 4 ]
+    , target   = []
+    , limitNum = 7
+    , terminator
+    ;
+
+  t.plan(expected.length + 3);
+
+  setTimeout(function()
+  {
+    terminator();
+  }, 5 * (limitNum + expected.reduce(function(a, b){ return a + b; })));
+
+  terminator = serial(source, function(item, key, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.ok(item < limitNum, 'expect only numbers (' + key + ':' + item + ') less than (' + limitNum + ') being processed');
+
+      target.push(item);
+      cb(null, item);
+    }, 5 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    t.error(err, 'expect no error response');
+    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source object');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+});
+
+test('serial: object: terminated prematurely from outside', function(t)
+{
+  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , expected = { }
+    , terminator
+    ;
+
+  t.plan(2);
+
+  terminator = serial(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.fail('do not expect it to come that far');
+      cb(null, item);
+    }, 5 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    t.error(err, 'expect no error response');
+    t.deepEqual(result, expected, 'expect result to contain salvaged parts of the source object');
+  });
+
+  terminator();
+});
+
+test('serial: object: terminated too late from outside', function(t)
+{
+  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , salvaged = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , expected = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+    , target   = []
+    , terminator
+    ;
+
+  t.plan(expected.length + 3);
+
+  terminator = serial(source, function(item, key, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.equal(source[key], item, 'expect item (' + key + ':' + item + ') to equal ' + source[key]);
+
+      target.push(item);
+      cb(null, item);
+    }, 5 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    // terminate it after it's done
+    terminator();
+
+    t.error(err, 'expect no error response');
+    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source oject');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+});
+
 test('serial: object: handles non terminable iterations', function(t)
 {
   var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }

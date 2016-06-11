@@ -1,5 +1,6 @@
-var iterate   = require('./lib/iterate.js')
-  , initState = require('./lib/state.js')
+var iterate    = require('./lib/iterate.js')
+  , initState  = require('./lib/state.js')
+  , terminator = require('./lib/terminator.js')
   ;
 
 // Public API
@@ -8,9 +9,10 @@ module.exports = parallel;
 /**
  * Runs iterator over provided array elements in parallel
  *
- * @param {array|object} list - array or object (named list) to iterate over
- * @param {function} iterator - iterator to run
- * @param {function} callback - invoked when all elements processed
+ * @param   {array|object} list - array or object (named list) to iterate over
+ * @param   {function} iterator - iterator to run
+ * @param   {function} callback - invoked when all elements processed
+ * @returns {function} - jobs terminator
  */
 function parallel(list, iterator, callback)
 {
@@ -36,4 +38,6 @@ function parallel(list, iterator, callback)
 
     state.index++;
   }
+
+  return terminator.bind(state, callback);
 }

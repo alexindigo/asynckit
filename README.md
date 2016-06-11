@@ -19,9 +19,9 @@ It ensures async operations to keep behavior more stable and prevent `Maximum ca
 
 | compression        |     size |
 | :----------------- | -------: |
-| asynckit.js        | 10.44 kB |
-| asynckit.min.js    |  3.47 kB |
-| asynckit.min.js.gz |  1.32 kB |
+| asynckit.js        | 11.63 kB |
+| asynckit.min.js    |  3.94 kB |
+| asynckit.min.js.gz |  1.42 kB |
 
 
 ## Install
