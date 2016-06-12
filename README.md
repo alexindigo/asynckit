@@ -3,8 +3,8 @@
 Minimal async jobs utility library.
 
 [![PhantomJS Build](https://img.shields.io/travis/alexindigo/asynckit/master.svg?label=browser&style=flat)](https://travis-ci.org/alexindigo/asynckit)
-[![Linux Build](https://img.shields.io/travis/alexindigo/asynckit/master.svg?label=linux:0.10-6.x&style=flat)](https://travis-ci.org/alexindigo/asynckit)
-[![Windows Build](https://img.shields.io/appveyor/ci/alexindigo/asynckit/master.svg?label=windows:0.10-6.x&style=flat)](https://ci.appveyor.com/project/alexindigo/asynckit)
+[![Linux Build](https://img.shields.io/travis/alexindigo/asynckit/master.svg?label=linux:0.12-6.x&style=flat)](https://travis-ci.org/alexindigo/asynckit)
+[![Windows Build](https://img.shields.io/appveyor/ci/alexindigo/asynckit/master.svg?label=windows:0.12-6.x&style=flat)](https://ci.appveyor.com/project/alexindigo/asynckit)
 
 [![Coverage Status](https://img.shields.io/coveralls/alexindigo/asynckit/master.svg?label=code+coverage&style=flat)](https://coveralls.io/github/alexindigo/asynckit?branch=master)
 [![Dependency Status](https://img.shields.io/david/alexindigo/asynckit.svg?style=flat)](https://david-dm.org/alexindigo/asynckit)
