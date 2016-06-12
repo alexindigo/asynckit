@@ -11,7 +11,7 @@
     "browser": "browserify -t browserify-istanbul test/lib/browserify_adjustment.js test/test-*.js | obake --coverage | tap-spec",
     "report": "istanbul report",
     "size": "browserify index.js | size-table asynckit",
-    "debug": "tape test/test-*.js | tap-spec"
+    "debug": "tape test/test-*.js"
   },
   "pre-commit": [
     "clean",

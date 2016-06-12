@@ -224,3 +224,41 @@ test('stream: parallel: array: destroyed cleanly at start', function(t)
   // destroy stream before element 16 is processed
   stream.destroy();
 });
+
+test('stream: parallel: array: destroyed after finish', function(t)
+{
+  var source   = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+    , salvaged = [ 1, 1, 4, 16, 64, 32, 8, 2 ]
+    , expected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
+    , target   = []
+    , stream
+    ;
+
+  t.plan(expected.length * 2 + 3);
+
+  stream = asynckitStream.parallel(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      // just "hardcode" first element
+      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
+
+      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current number (' + item + ')');
+
+      target.push(item);
+      cb(null, item);
+    }, 25 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    stream.destroy();
+
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source array');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+
+  streamAssert.success(t, stream, {elements: salvaged});
+});
