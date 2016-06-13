@@ -14,7 +14,7 @@ test('stream: parallel: iterates over object', function(t)
     , stream
     ;
 
-  t.plan(keys.length * 3 + 3);
+  t.plan(keys.length * 3 + 4);
 
   // supports full value, key, callback (shortcut) interface
   stream = asynckitStream.parallel(source, function(item, key, cb)
@@ -45,7 +45,7 @@ test('stream: parallel: handles sync object iterator asynchronously', function(t
     , stream
     ;
 
-  t.plan(keys.length * 3 + 3);
+  t.plan(keys.length * 3 + 4);
 
   defer(function(){ isAsync = true; });
 
@@ -77,7 +77,7 @@ test('stream: parallel: object: longest finishes last', function(t)
     , stream
     ;
 
-  t.plan(keys.length * 2 + 3);
+  t.plan(keys.length * 2 + 4);
 
   // supports just value, callback (shortcut) interface
   stream = asynckitStream.parallel(source, function(item, cb)
@@ -159,6 +159,125 @@ test('stream: parallel: object: terminates early', function(t)
   streamAssert.failure(t, stream, {elements: salvaged, error: expError});
 });
 
+test('stream: parallel: object: destroyed cleanly', function(t)
+{
+  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , salvaged = { first: 1, one: 1, two: 2, four: 4, eight: 8}
+    , expected = [ 1, 1, 2, 4, 8 ]
+    , limitNum = 15
+    , target   = []
+    , stream
+    ;
+
+  t.plan(expected.length * 3 + 4);
+
+  // destroy stream before element 16 is processed
+  setTimeout(function()
+  {
+    stream.destroy();
+  }, 25 * limitNum);
+
+  // do it couple times to make sure
+  setTimeout(function()
+  {
+    stream.destroy();
+  }, 25 * (limitNum + 1));
+
+  stream = asynckitStream.parallel(source, function(item, key, cb)
+  {
+    var id = setTimeout(function()
+    {
+      // just "hardcode" first element
+      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
+
+      t.ok(item < limitNum, 'expect only numbers (' + item + ') less than ' + limitNum + ' to be processed.');
+      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current item (' + key + ':' + item + ')');
+
+      target.push(item);
+      cb(null, item);
+    }, 25 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source object');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+
+  streamAssert.success(t, stream, {elements: salvaged});
+});
+
+test('stream: parallel: object: destroyed cleanly at start', function(t)
+{
+  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , expected = { }
+    , stream
+    ;
+
+  t.plan(3);
+
+  stream = asynckitStream.parallel(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      t.fail('do not expect it to come that far');
+      cb(null, item);
+    }, 25 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, expected, 'expect result to contain salvaged parts of the source object');
+  });
+
+  streamAssert.success(t, stream, {elements: expected});
+
+  // destroy stream before element 16 is processed
+  stream.destroy();
+});
+
+test('stream: parallel: object: destroyed after finish', function(t)
+{
+  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
+    , salvaged = { first: 1, one: 1, two: 2, four: 4, eight: 8, sixteen: 16, thirtyTwo: 32, sixtyFour: 64 }
+    , expected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
+    , target   = []
+    , stream
+    ;
+
+  t.plan(expected.length * 2 + 4);
+
+  stream = asynckitStream.parallel(source, function(item, cb)
+  {
+    var id = setTimeout(function()
+    {
+      // just "hardcode" first element
+      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
+
+      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current number (' + item + ')');
+
+      target.push(item);
+      cb(null, item);
+    }, 25 * item);
+
+    return clearTimeout.bind(null, id);
+  },
+  function(err, result)
+  {
+    stream.destroy();
+
+    t.error(err, 'expect no errors');
+    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source object');
+    t.deepEqual(target, expected, 'expect target to contain passed numbers');
+  });
+
+  streamAssert.success(t, stream, {elements: salvaged});
+});
+
 test('stream: parallel: object: handles non terminable iterations', function(t)
 {
   var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
@@ -212,7 +331,7 @@ test('stream: parallel: object: handles unclean callbacks', function(t)
     , stream
     ;
 
-  t.plan(keys.length * 3 + 2);
+  t.plan(keys.length * 3 + 3);
 
   // supports full value, key, callback (shortcut) interface
   stream = asynckitStream.parallel(source, function(item, key, cb)
@@ -234,117 +353,4 @@ test('stream: parallel: object: handles unclean callbacks', function(t)
   });
 
   streamAssert.success(t, stream, {elements: expected});
-});
-
-test('stream: parallel: object: destroyed cleanly', function(t)
-{
-  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
-    , salvaged = { first: 1, one: 1, two: 2, four: 4, eight: 8}
-    , expected = [ 1, 1, 2, 4, 8 ]
-    , limitNum = 15
-    , target   = []
-    , stream
-    ;
-
-  t.plan(expected.length * 3 + 3);
-
-  // destroy stream before element 16 is processed
-  setTimeout(function()
-  {
-    stream.destroy();
-  }, 25 * limitNum);
-
-  stream = asynckitStream.parallel(source, function(item, key, cb)
-  {
-    var id = setTimeout(function()
-    {
-      // just "hardcode" first element
-      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
-
-      t.ok(item < limitNum, 'expect only numbers (' + item + ') less than ' + limitNum + ' to be processed.');
-      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current item (' + key + ':' + item + ')');
-
-      target.push(item);
-      cb(null, item);
-    }, 25 * item);
-
-    return clearTimeout.bind(null, id);
-  },
-  function(err, result)
-  {
-    t.error(err, 'expect no errors');
-    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source object');
-    t.deepEqual(target, expected, 'expect target to contain passed numbers');
-  });
-
-  streamAssert.success(t, stream, {elements: salvaged});
-});
-
-test('stream: parallel: object: destroyed cleanly at start', function(t)
-{
-  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
-    , expected = { }
-    , stream
-    ;
-
-  t.plan(2);
-
-  stream = asynckitStream.parallel(source, function(item, cb)
-  {
-    var id = setTimeout(function()
-    {
-      t.fail('do not expect it to come that far');
-      cb(null, item);
-    }, 25 * item);
-
-    return clearTimeout.bind(null, id);
-  },
-  function(err, result)
-  {
-    t.error(err, 'expect no errors');
-    t.deepEqual(result, expected, 'expect result to contain salvaged parts of the source object');
-  });
-
-  streamAssert.success(t, stream, {elements: expected});
-
-  // destroy stream before element 16 is processed
-  stream.destroy();
-});
-
-test('stream: parallel: object: destroyed after finish', function(t)
-{
-  var source   = { first: 1, one: 1, four: 4, sixteen: 16, sixtyFour: 64, thirtyTwo: 32, eight: 8, two: 2 }
-    , salvaged = { first: 1, one: 1, two: 2, four: 4, eight: 8, sixteen: 16, thirtyTwo: 32, sixtyFour: 64 }
-    , expected = [ 1, 1, 2, 4, 8, 16, 32, 64 ]
-    , target   = []
-    , stream
-    ;
-
-  t.plan(expected.length * 2 + 3);
-
-  stream = asynckitStream.parallel(source, function(item, cb)
-  {
-    var id = setTimeout(function()
-    {
-      // just "hardcode" first element
-      var sum = target.reduce(function(acc, num){ return acc + num; }, 0) || 1;
-
-      t.equal(sum, item, 'expect sum (' + sum + ') to be equal current number (' + item + ')');
-
-      target.push(item);
-      cb(null, item);
-    }, 25 * item);
-
-    return clearTimeout.bind(null, id);
-  },
-  function(err, result)
-  {
-    stream.destroy();
-
-    t.error(err, 'expect no errors');
-    t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source object');
-    t.deepEqual(target, expected, 'expect target to contain passed numbers');
-  });
-
-  streamAssert.success(t, stream, {elements: salvaged});
 });

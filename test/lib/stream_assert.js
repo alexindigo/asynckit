@@ -69,6 +69,10 @@ function Receiver(test, fixture)
     {
       test.fail('+ do not expect stream to have normal ending');
     }
+    else
+    {
+      test.ok(true, '+ stream finished successfully.');
+    }
   });
 
 }

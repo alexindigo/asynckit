@@ -12,7 +12,7 @@ test('stream: parallel: iterates over array', function(t)
     , stream
     ;
 
-  t.plan(expected.length * 2 + 3);
+  t.plan(expected.length * 2 + 4);
 
   stream = asynckitStream.parallel(source, function(item, cb)
   {
@@ -128,7 +128,7 @@ test('stream: parallel: array: handles unclean callbacks', function(t)
     , stream
     ;
 
-  t.plan(expected.length * 2 + 2);
+  t.plan(expected.length * 2 + 3);
 
   stream = asynckitStream.parallel(source, function(item, cb)
   {
@@ -160,7 +160,7 @@ test('stream: parallel: array: destroyed cleanly', function(t)
     , stream
     ;
 
-  t.plan(expected.length * 3 + 3);
+  t.plan(expected.length * 3 + 4);
 
   // destroy stream before element 16 is processed
   setTimeout(function()
@@ -201,7 +201,7 @@ test('stream: parallel: array: destroyed cleanly at start', function(t)
     , stream
     ;
 
-  t.plan(2);
+  t.plan(3);
 
   stream = asynckitStream.parallel(source, function(item, cb)
   {
@@ -234,7 +234,7 @@ test('stream: parallel: array: destroyed after finish', function(t)
     , stream
     ;
 
-  t.plan(expected.length * 2 + 3);
+  t.plan(expected.length * 2 + 4);
 
   stream = asynckitStream.parallel(source, function(item, cb)
   {
@@ -254,6 +254,7 @@ test('stream: parallel: array: destroyed after finish', function(t)
   function(err, result)
   {
     stream.destroy();
+    stream.destroy(); // do it couple times to make sure
 
     t.error(err, 'expect no errors');
     t.deepEqual(result, salvaged, 'expect result to contain salvaged parts of the source array');
