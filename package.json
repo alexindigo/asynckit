@@ -1,7 +1,7 @@
 {
   "name": "asynckit",
   "version": "0.4.0",
-  "description": "Minimal async jobs utility library",
+  "description": "Minimal async jobs utility library, with streams support",
   "main": "index.js",
   "scripts": {
     "clean": "rimraf coverage",
@@ -32,7 +32,11 @@
     "serial",
     "iterator",
     "array",
-    "object"
+    "object",
+    "stream",
+    "destroy",
+    "terminate",
+    "abort"
   ],
   "author": "Alex Indigo <iam@alexindigo.com>",
   "license": "MIT",
@@ -41,10 +45,10 @@
   },
   "homepage": "https://github.com/alexindigo/asynckit#readme",
   "devDependencies": {
-    "browserify": "^13.0.1",
+    "browserify": "^13.0.0",
     "browserify-istanbul": "^2.0.0",
     "coveralls": "^2.11.9",
-    "eslint": "^2.12.0",
+    "eslint": "^2.9.0",
     "istanbul": "^0.4.3",
     "obake": "^0.1.2",
     "phantomjs-prebuilt": "^2.1.7",

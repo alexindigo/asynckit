@@ -1,6 +1,6 @@
 # asynckit [![NPM Module](https://img.shields.io/npm/v/asynckit.svg?style=flat)](https://www.npmjs.com/package/asynckit)
 
-Minimal async jobs utility library.
+Minimal async jobs utility library, with streams support.
 
 [![PhantomJS Build](https://img.shields.io/travis/alexindigo/asynckit/master.svg?label=browser&style=flat)](https://travis-ci.org/alexindigo/asynckit)
 [![Linux Build](https://img.shields.io/travis/alexindigo/asynckit/master.svg?label=linux:0.12-6.x&style=flat)](https://travis-ci.org/alexindigo/asynckit)
