@@ -1,5 +1,5 @@
 /* eslint no-sparse-arrays: "off" */
-var test          = require('tape').test
+var test           = require('tape').test
   , streamAssert   = require('./lib/stream_assert.js')
   , asynckitStream = require('../stream.js')
   ;
@@ -150,7 +150,7 @@ test('stream: serialOrdered: iterates over array custom sorted', function(t)
   {
     var prevChar = String.fromCharCode(64 + prev);
     // stream chunks posted in order
-    t.equal(prevChar, item, '+ expect item (' + item + ') to equal updated prev char (' + prevChar + ') on each iteration – descending sorting');
+    t.equal(prevChar, item, '+ expect item (' + item + ') to equal updated prev char (' + prevChar + ') on each iteration – custom sorting');
   }});
 });
 

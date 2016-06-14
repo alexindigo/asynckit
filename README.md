@@ -19,9 +19,9 @@ It ensures async operations to keep behavior more stable and prevent `Maximum ca
 
 | compression        |     size |
 | :----------------- | -------: |
-| asynckit.js        | 11.63 kB |
-| asynckit.min.js    |  3.94 kB |
-| asynckit.min.js.gz |  1.42 kB |
+| asynckit.js        | 12.34 kB |
+| asynckit.min.js    |  4.11 kB |
+| asynckit.min.js.gz |  1.47 kB |
 
 
 ## Install
@@ -214,7 +214,13 @@ Whenever order of the jobs' execution is important please use `serialOrdered` me
 
 ### Ordered Serial Iterations
 
+TBD
+
 For example [compare-property](compare-property) package.
+
+### Streaming interface
+
+TBD
 
 ## Want to Know More?
 
