@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/alexindigo/asynckit#readme",
   "devDependencies": {
-    "browserify": "^13.0.0",
+    "browserify": "^13.2.0",
     "browserify-istanbul": "^2.0.0",
     "coveralls": "^2.11.9",
     "eslint": "^2.9.0",
