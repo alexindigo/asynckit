@@ -48,7 +48,7 @@
     "browserify": "^13.0.0",
     "browserify-istanbul": "^2.0.0",
     "coveralls": "^2.11.9",
-    "eslint": "^2.9.0",
+    "eslint": "^3.13.1",
     "istanbul": "^0.4.3",
     "obake": "^0.1.2",
     "phantomjs-prebuilt": "^2.1.7",
