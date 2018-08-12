@@ -1,4 +1,5 @@
 # asynckit [![NPM Module](https://img.shields.io/npm/v/asynckit.svg?style=flat)](https://www.npmjs.com/package/asynckit)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falexindigo%2Fasynckit.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Falexindigo%2Fasynckit?ref=badge_shield)
 
 Minimal async jobs utility library, with streams support.
 
@@ -231,3 +232,6 @@ Or open an [issue](https://github.com/alexindigo/asynckit/issues) with questions
 ## License
 
 AsyncKit is licensed under the MIT license.
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falexindigo%2Fasynckit.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Falexindigo%2Fasynckit?ref=badge_large)
