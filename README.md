@@ -2,13 +2,7 @@
 
 Minimal async jobs utility library, with streams support.
 
-[![PhantomJS Build](https://img.shields.io/travis/alexindigo/asynckit/master.svg?label=browser&style=flat)](https://travis-ci.org/alexindigo/asynckit)
-[![Linux Build](https://img.shields.io/travis/alexindigo/asynckit/master.svg?label=linux:0.12-6.x&style=flat)](https://travis-ci.org/alexindigo/asynckit)
-[![Windows Build](https://img.shields.io/appveyor/ci/alexindigo/asynckit/master.svg?label=windows:0.12-6.x&style=flat)](https://ci.appveyor.com/project/alexindigo/asynckit)
-
 [![Coverage Status](https://img.shields.io/coveralls/alexindigo/asynckit/master.svg?label=code+coverage&style=flat)](https://coveralls.io/github/alexindigo/asynckit?branch=master)
-[![Dependency Status](https://img.shields.io/david/alexindigo/asynckit.svg?style=flat)](https://david-dm.org/alexindigo/asynckit)
-[![bitHound Overall Score](https://www.bithound.io/github/alexindigo/asynckit/badges/score.svg)](https://www.bithound.io/github/alexindigo/asynckit)
 
 <!-- [![Readme](https://img.shields.io/badge/readme-tested-brightgreen.svg?style=flat)](https://www.npmjs.com/package/reamde) -->
 
